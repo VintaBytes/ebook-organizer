@@ -18,7 +18,7 @@ Este proyecto consiste en un **script Python** diseñado para organizar y gestio
 
 #### 2. **Cómo maneja las carpetas:**
    - El script está ubicado en una carpeta raíz que contiene dos subcarpetas:
-     - **"aordenar"**: Es donde se almacenan los libros pendientes de procesar.
+     - **"aordenar"**: Es donde se almacenan los libros pendientes de procesar. Puede tener todos los niveles de subcarpetas que sea necesario.
      - **"ordenados"**: Es la carpeta donde se moverán los libros después de ser organizados.
    - A medida que procesa cada libro, crea una **subcarpeta** dentro de "ordenados" con el nombre del autor.
    - El archivo es renombrado y movido a la subcarpeta correspondiente. Si el autor tiene varios libros, todos se agrupan en la misma carpeta.
