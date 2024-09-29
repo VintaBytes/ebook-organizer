@@ -1,5 +1,5 @@
 # Organizador de colecciones de libros en formato ePub.
-
+Este proyecto es ideal para aquellos que deseen automatizar la organización de grandes colecciones de libros electrónicos, basándose en metadatos precisos y evitando duplicados.
 
 <span><img src="https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue"/></span>
 
@@ -29,4 +29,4 @@ Este proyecto consiste en un **script Python** diseñado para organizar y gestio
    - **hashlib**: Para generar hashes de los archivos y detectar duplicados.
    - **ebooklib**: Para leer los archivos EPUB y extraer los metadatos (autor, título, y año de publicación).
 
-Este proyecto es ideal para aquellos que deseen automatizar la organización de grandes colecciones de libros electrónicos, basándose en metadatos precisos y evitando duplicados.
+
