@@ -5,7 +5,7 @@ Este proyecto es ideal para aquellos que deseen automatizar la organización de 
 
 ### Descripción del proyecto
 
-Este proyecto consiste en un **script Python** diseñado para organizar y gestionar archivos de libros electrónicos en formato **EPUB**. El objetivo principal del script es mover, renombrar y organizar los libros en función de los metadatos presentes en cada archivo, como el nombre del autor, el título de la obra y el año de publicación. A continuación, se detalla lo que realiza el script:
+Este proyecto consiste en un **script Python** (`ordenar.py`) diseñado para organizar y gestionar archivos de libros electrónicos en formato **EPUB**. El objetivo principal del script es mover, renombrar y organizar los libros en función de los metadatos presentes en cada archivo, como el nombre del autor, el título de la obra y el año de publicación. A continuación, se detalla lo que realiza el script:
 
 #### 1. **Qué hace el script:**
    - **Recorre carpetas** en busca de archivos **EPUB**.
