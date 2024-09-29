@@ -167,4 +167,68 @@ directorio_ordenado = os.path.join(directorio_base, "ordenados")
 mover_y_renombrar_libros(directorio_aordenar, directorio_ordenado)
 ```
 
-Este proyecto ofrece una solución automatizada y eficiente para organizar grandes colecciones de libros EPUB, aprovechando los metadatos disponibles y manejando los errores y duplicados de manera sencilla.
+Este proyecto ofrece una solución automatizada (y bastante buena) para organizar grandes colecciones de libros EPUB, aprovechando los metadatos disponibles y manejando los errores y duplicados de manera sencilla. Pero no es perfecta. 
+
+### 5. **Buscar carpetas similares**
+
+El script original no hace magia. Si hay autores que aparecen en los textos con nombres ligeramente diferentes (usando o no tildes, o iniciales en lugar de sus nombres) `ordenar.py` generará más de una carpeta para el mismo autor, con algunos libros en una, y otros libros en la otra.
+
+El script `buscar_similares.py` busca resolver el problema de **carpetas duplicadas o redundantes** que hemos mencionador. A menudo, en grandes colecciones de libros digitales, los autores pueden aparecer con variaciones en su nombre (por ejemplo, "Abe, Kôbô" y "Abe, Kobô"). El objetivo de este segundo script es **identificar automáticamente estas posibles duplicaciones o errores en la estructura de carpetas** y sugerir qué carpetas pueden ser fusionadas. Esto lo hace mediante dos comparaciones clave: la primera es entre los **nombres de las carpetas** (nombres de autores) para detectar similitudes, y la segunda es entre los **archivos dentro de esas carpetas**, verificando si los libros contenidos en ellas son los mismos. De este modo, busca unificar en una sola carpeta a los libros que pertenezcan al mismo autor pero que estén repartidos en varias carpetas debido a inconsistencias en los nombres.
+
+Este script está diseñado para revisar las carpetas dentro del directorio "ordenados", identificar posibles duplicados o carpetas que pertenezcan al mismo autor y generar un archivo con sugerencias de fusión. La función `calcular_hash` se encarga de generar un hash único para cada archivo EPUB en las carpetas. Esto permite verificar si dos libros son exactamente iguales, lo que es útil para detectar duplicados, ya que los archivos idénticos compartirán el mismo hash.
+
+```python
+def calcular_hash(archivo):
+    hash_sha256 = hashlib.sha256()
+    with open(archivo, "rb") as f:
+        while chunk := f.read(8192):
+            hash_sha256.update(chunk)
+    return hash_sha256.hexdigest()
+```
+
+Para comparar los nombres de los autores, la función `nombres_similares` utiliza la librería `difflib`, que mide la similitud entre dos cadenas de texto. Si los nombres de las carpetas son suficientemente similares, de acuerdo con un umbral definido (0.7 por defecto), se consideran candidatos para ser del mismo autor. Esta función se enfoca en diferencias leves en los nombres, como errores tipográficos o variaciones en el uso de acentos.
+
+```python
+from difflib import SequenceMatcher
+
+def nombres_similares(nombre1, nombre2, umbral=0.7):
+    return SequenceMatcher(None, nombre1.lower(), nombre2.lower()).ratio() > umbral
+```
+
+El contenido de las carpetas se compara con la función `comparar_contenido_carpeta`. Esta función calcula los hashes de los archivos en ambas carpetas y verifica si contienen los mismos libros. Si los archivos en las dos carpetas tienen los mismos nombres y hashes, significa que contienen los mismos libros, y las carpetas pueden fusionarse.
+
+```python
+def comparar_contenido_carpeta(carpeta1, carpeta2):
+    archivos1 = {archivo: calcular_hash(os.path.join(carpeta1, archivo)) for archivo in os.listdir(carpeta1) if archivo.endswith(".epub")}
+    archivos2 = {archivo: calcular_hash(os.path.join(carpeta2, archivo)) for archivo in os.listdir(carpeta2) if archivo.endswith(".epub")}
+    
+    return archivos1 == archivos2
+```
+
+La función principal del script es `generar_sugerencias_fusion`, que recorre todas las carpetas en "ordenados", comparando los nombres de las carpetas y el contenido de sus archivos. Si detecta carpetas que pueden ser fusionadas, escribe sus nombres en un archivo de texto llamado `sugerencias_fusion.txt`. Este archivo es fácil de leer y te permitirá revisar las carpetas que el script sugiere fusionar.
+
+```python
+def generar_sugerencias_fusion(directorio_ordenado, archivo_salida="sugerencias_fusion.txt"):
+    carpetas = [carpeta for carpeta in os.listdir(directorio_ordenado) if os.path.isdir(os.path.join(directorio_ordenado, carpeta))]
+    fusion_sugerencias = []
+
+    for i in range(len(carpetas)):
+        carpeta1 = os.path.join(directorio_ordenado, carpetas[i])
+        nombre_carpeta1 = carpetas[i]
+
+        for j in range(i + 1, len(carpetas)):
+            carpeta2 = os.path.join(directorio_ordenado, carpetas[j])
+            nombre_carpeta2 = carpetas[j]
+
+            if nombres_similares(nombre_carpeta1, nombre_carpeta2):
+                if comparar_contenido_carpeta(carpeta1, carpeta2):
+                    fusion_sugerencias.append(f'"{nombre_carpeta1}" puede fusionarse con "{nombre_carpeta2}"')
+
+    with open(archivo_salida, "w") as f:
+        for sugerencia in fusion_sugerencias:
+            f.write(sugerencia + "\n")
+
+    print(f"Proceso completo. Se generó el archivo {archivo_salida} con las sugerencias de fusión.")
+```
+
+Para usar este script, debes colocarlo en la misma carpeta que el anterior, asegurándote de que la carpeta "ordenados" contiene las carpetas de los autores que deseas revisar. Luego, al correr el script, este generará el archivo `sugerencias_fusion.txt`, en el que se listarán las carpetas que el script ha determinado que podrían fusionarse.
