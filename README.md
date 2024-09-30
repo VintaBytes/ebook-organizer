@@ -247,4 +247,59 @@ La salida del script será un archivo de texto con un contenido similar a este:
 No está del todo mal, pero hay algunas carpetas en la lista que **no** deberían fusionarse. Asi que editaremos manualmente el archivo `sugerencias_fusion.txt`, quitando las lineas que correspondan a carpetas que no deben fusionarse, y lo usaremos como entrada para el script siguiente `fusionar.py` para combinar las carpetas que pertenecen al mismo autor.
 
 
+### 6. **Fusionar carpetas similares**
+Este script, llamado `fusionar.py`, está diseñado para procesar un archivo de texto generado por un script anterior, en el que se sugieren fusiones entre carpetas de autores que tienen nombres similares. El archivo contiene líneas en las que se indica que dos carpetas pueden fusionarse. El script toma esa información, mueve los archivos de una carpeta a la otra, y luego elimina la carpeta que quedó vacía.
+
+El proceso comienza con la función `fusionar_carpetas`, que toma dos carpetas como argumentos. La función recorre todos los archivos dentro de la segunda carpeta, `carpeta2`, y los mueve a la primera carpeta, `carpeta1`. Si un archivo con el mismo nombre ya existe en `carpeta1`, la función lo renombra para evitar que se sobrescriba. Para lograr esto, el nombre del archivo se mantiene, pero se le añade un sufijo `_duplicado` antes de la extensión, asegurando que ambos archivos puedan coexistir sin problemas.
+
+```python
+def fusionar_carpetas(carpeta1, carpeta2):
+    for archivo in os.listdir(carpeta2):
+        archivo_origen = os.path.join(carpeta2, archivo)
+        archivo_destino = os.path.join(carpeta1, archivo)
+        
+        if os.path.exists(archivo_destino):
+            nombre, extension = os.path.splitext(archivo)
+            archivo_destino = os.path.join(carpeta1, f"{nombre}_duplicado{extension}")
+        
+        shutil.move(archivo_origen, archivo_destino)
+    
+    os.rmdir(carpeta2)
+    print(f"Carpeta '{carpeta2}' fusionada con '{carpeta1}' y eliminada.")
+```
+
+Después de mover los archivos, la carpeta `carpeta2` se elimina con el comando `os.rmdir(carpeta2)`, dado que ya no contiene ningún archivo. Además, la función imprime un mensaje en la consola para indicar que la fusión se ha completado y la carpeta ha sido eliminada.
+
+La función principal del script es `procesar_fusion`, que se encarga de leer el archivo de fusión, en este caso llamado `sugerencias_fusion.txt`. Este archivo contiene las líneas que indican las carpetas a fusionar, en un formato como `"Autor1" puede fusionarse con "Autor2"`. La función lee cada línea, la procesa y extrae los nombres de las carpetas que deben ser fusionadas. Luego, verifica que ambas carpetas existan en el sistema de archivos. Si ambas carpetas están presentes, llama a la función `fusionar_carpetas` para realizar la fusión.
+
+```python
+def procesar_fusion(archivo_fusion, directorio_ordenado):
+    with open(archivo_fusion, "r") as f:
+        lineas = f.readlines()
+    
+    for linea in lineas:
+        if "puede fusionarse con" in linea:
+            partes = linea.replace('"', '').strip().split(' puede fusionarse con ')
+            carpeta1 = os.path.join(directorio_ordenado, partes[0])
+            carpeta2 = os.path.join(directorio_ordenado, partes[1])
+
+            if os.path.exists(carpeta1) and os.path.exists(carpeta2):
+                fusionar_carpetas(carpeta1, carpeta2)
+            else:
+                print(f"Una de las carpetas no existe: {carpeta1} o {carpeta2}")
+```
+
+Dentro de esta función, se lee el archivo línea por línea y se verifica si contiene la cadena `"puede fusionarse con"`. Si se encuentra esa frase, la línea se divide en dos partes, separando las carpetas que deben fusionarse. A continuación, el script verifica que ambas carpetas existan utilizando `os.path.exists`. Si alguna de las carpetas no está presente, se imprime un mensaje en la consola notificando que no se puede proceder con la fusión para esas carpetas. En caso contrario, se llama a `fusionar_carpetas` para realizar la operación.
+
+Finalmente, el script define la ruta del directorio "ordenados", donde se encuentran las carpetas de autores, y también define la ruta del archivo de fusión, `sugerencias_fusion.txt`. Estas rutas se combinan para que el script sepa dónde buscar los archivos y carpetas, y luego se ejecuta la función `procesar_fusion`.
+
+```python
+directorio_base = os.getcwd()
+directorio_ordenado = os.path.join(directorio_base, "ordenados")
+archivo_fusion = os.path.join(directorio_base, "sugerencias_fusion.txt")
+
+procesar_fusion(archivo_fusion, directorio_ordenado)
+```
+
+Es decir, este script deja todo ordenado, usando una única carpeta por autor.
 
